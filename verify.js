@@ -11,35 +11,42 @@ const ipAdress = 'http://172.16.22.214:3000'
 
 var rfid = rfidlib.use(tessel.port['A']);
 var servo = servolib.use(tessel.port['B']);
+const servo1 = 1;
 
-rfid.on('ready', function (version) {
-  console.log('Ready to read RFID card');
+servo.on('ready', function () {
+  var position = 0;
+  servo.configure(servo1, 0.05, 0.12, function () {
+    servo.move(servo1, position);
+    console.log('Gate Ready');
 
-  rfid.on('data', function(card) {
-    //let currentCard = '0207be03'
-    let currentCard = card.uid.toString('hex');
-    http.get(ipAdress + '/' + currentCard, res => {
-        if (res.statusCode === 200){
-          servo.on('ready', function () {
-            var position = 0;
-            servo.configure(servo1, 0.05, 0.12, function () {
-              position = 1;
+    rfid.on('ready', function (version) {
+      console.log('Ready to read RFID card');
+
+      rfid.on('data', function(card) {
+        //let currentCard = '0207be03'
+        let currentCard = card.uid.toString('hex');
+        http.get(ipAdress + '/' + currentCard, res => {
+            if (res.statusCode === 200){
+              position = 0.5;
               servo.move(servo1, position);
-              setInterval(function () {
+              setTimeout(function () {
                 position = 0;
                 servo.move(servo1, position);
               }, 3000);
-            });
-          });
-          console.log('Access Granted');
-        } else {
-          console.log('Access Denied')
-        }
-    })
+              console.log('Access Granted');
+            } else {
+              console.log('Access Denied')
+            }
+        })
+
+      });
+    });
+
+    rfid.on('error', function (err) {
+      console.error(err);
+    });
 
   });
+
 });
 
-rfid.on('error', function (err) {
-  console.error(err);
-});

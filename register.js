@@ -45,6 +45,13 @@ rfid.on('ready', function (version) {
       console.log('Registering UID:', card.uid.toString('hex'));
       postRFID(card.uid.toString('hex'));
       firstRead = false;
+
+      const av = require('tessel-av');
+      const camera = new av.Camera();
+      const capture = camera.capture();
+      capture.on('data', function(data) {
+        console.log('Camera data:', data);
+      })
     }
   });
 });
