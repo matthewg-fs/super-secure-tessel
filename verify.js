@@ -12,6 +12,7 @@ const ipAdress = 'http://172.16.22.214:3000'
 var rfid = rfidlib.use(tessel.port['A']);
 var servo = servolib.use(tessel.port['B']);
 const servo1 = 1;
+var firstRead = true;
 
 servo.on('ready', function () {
   var position = 0;
@@ -23,22 +24,24 @@ servo.on('ready', function () {
       console.log('Ready to read RFID card');
 
       rfid.on('data', function(card) {
-        //let currentCard = '0207be03'
-        let currentCard = card.uid.toString('hex');
-        http.get(ipAdress + '/' + currentCard, res => {
-            if (res.statusCode === 200){
-              position = 0.5;
-              servo.move(servo1, position);
-              setTimeout(function () {
-                position = 0;
+        if (firstRead) {
+          firstRead = false;
+        } else {
+          let currentCard = card.uid.toString('hex');
+          http.get(ipAdress + '/' + currentCard, res => {
+              if (res.statusCode === 200){
+                position = 0.5;
                 servo.move(servo1, position);
-              }, 3000);
-              console.log('Access Granted');
-            } else {
-              console.log('Access Denied')
-            }
-        })
-
+                setTimeout(function () {
+                  position = 0;
+                  servo.move(servo1, position);
+                }, 3000);
+                console.log('Access Granted');
+              } else {
+                console.log('Access Denied')
+              }
+          })
+        }
       });
     });
 
